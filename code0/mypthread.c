@@ -1,26 +1,35 @@
 // File:	mypthread.c
-
-// List all group members' names:
+// group members' names: Qipan Xu; Zihan Chen
 // iLab machine tested on:
 
 #include "mypthread.h"
-
+#include <pthread.h>
 // INITAILIZE ALL YOUR VARIABLES HERE
 // YOUR CODE HERE
-
+struct ThreadQueue waitQueue;
+struct ThreadQueue readyQueue;
+tcb* t_remove = NULL;
 
 /* create a new thread */
 int mypthread_create(mypthread_t * thread, pthread_attr_t * attr, void *(*function)(void*), void * arg)
 {
-	   // YOUR CODE HERE	
-	
-	   // create a Thread Control Block
+       // create a Thread Control Block
+       tcb* t;
+       t->state = THREAD_UNINIT;
+       t->tid = *(thread);
 	   // create and initialize the context of this thread
+       getcontext(&t->context);
 	   // allocate heap space for this thread's stack
+       t->context.uc_stack.ss_sp = malloc(MEM);
+       t->context.uc_stack.ss_size = MEM;
+       // execute the specified function
+       t->function = function;
+       t->arg = arg;
+       t->function(t->arg);
 	   // after everything is all set, push this thread into the ready queue
-
-
-	return 0;
+       addThread(&readyQueue, t);
+       thread = (mypthread_t *) t;
+       return 0;
 };
 
 /* current thread voluntarily surrenders its remaining runtime for other threads to use */
@@ -38,23 +47,23 @@ int mypthread_yield()
 /* terminate a thread */
 void mypthread_exit(void *value_ptr)
 {
-	// YOUR CODE HERE
-
 	// preserve the return value pointer if not NULL
 	// deallocate any dynamic memory allocated when starting this thread
-	
-	return;
+    t_remove = removeThread(&readyQueue);
+    t_remove->value_ptr = value_ptr;
+    t_remove->state = THREAD_EXIT;
+    free(t_remove->context.uc_stack.ss_sp);
+    t_remove->context.uc_stack.ss_size = 0;
 };
 
 
 /* Wait for thread termination */
 int mypthread_join(mypthread_t thread, void **value_ptr)
 {
-	// YOUR CODE HERE
-
 	// wait for a specific thread to terminate
+    while(t_remove == NULL);
 	// deallocate any dynamic memory created by the joining thread
-
+    value_ptr = t_remove->value_ptr;
 	return 0;
 };
 
@@ -151,3 +160,4 @@ static void sched_MLFQ() {
 // Feel free to add any other functions you need
 
 // YOUR CODE HERE
+
