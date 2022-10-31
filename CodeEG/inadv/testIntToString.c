@@ -46,7 +46,7 @@ int main( int argc, char* argv[])
 	// demonstrate the the int name (i.e. 'ptr') holds
 	//   the address of the start of four bytes of space
 	//   and is an integer
-	printf("%d\n", sizeof(*ptr));
+	printf("%d\n", (int)(sizeof(*ptr)));
 	printf("%d\n", *ptr);
 
 	// since all memory addresses are the same size,

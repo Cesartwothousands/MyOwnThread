@@ -15,40 +15,59 @@ Decompress code.tar.gz on an iLab machine. It will contain a stubbed-out source 
 
 You will need to implement the following:
 
-int mypthread_create(mypthread_t * thread, pthread_attr_t * attr, void *(*function)(void*), void * arg);
+1. int mypthread_create(mypthread_t * thread, pthread_attr_t * attr, void *(*function)(void*), void * arg);
+
 \- this function creates a new 'mypthread'
+
 \- you may ignore the attribute struct and presume it will be passed a NULL ptr
+
 \- your return values should mirror pthread_create
 
-void mypthread_yield();
+2. void mypthread_yield();
+
 \- functionally a manual call to your scheduler
 
-void mypthread_exit(void *value_ptr);
+3. void mypthread_exit(void *value_ptr);
+
 \- a library call to explicitly end the calling thread
+
 \- if the return pointer is not NULL, you will need to save the value to be returned
 
-int mypthread_join(mypthread_t thread, void **value_ptr);
+4. int mypthread_join(mypthread_t thread, void **value_ptr);
+
 \- pauses the calling thread until the thread passed as a parameter exit()s
+
 \- if value_ptr is not NULL, you will need to import the return value
+
 \- your return values should mirror pthread_join
 
 
-int mypthread_mutex_init(mypthread_mutex_t *mutex, const pthread_mutexattr_t *mutexattr);
+5. int mypthread_mutex_init(mypthread_mutex_t *mutex, const pthread_mutexattr_t *mutexattr);
+
 \- this function sets up a new 'mutex'
+
 \- you may ignore the attribute struct and presume it will be passed a NULL ptr
+
 \- your return values should mirror pthread_mutex_init
 
-int mypthread_mutex_lock(mypthread_mutex_t *mutex);
+6. int mypthread_mutex_lock(mypthread_mutex_t *mutex);
+
 \- on run the calling thread either obtains the mutex, if free, or is deschedued if not until the mutex is freed
+
 \- your return values should mirror pthread_mutex_lock
 
-int mypthread_mutex_unlock(mypthread_mutex_t *mutex);
+7. int mypthread_mutex_unlock(mypthread_mutex_t *mutex);
+
 \- on run the calling thread unblocks the mutex, allowing a thread waiting for it to be scheduled to run
+
 \- your return values should mirror pthread_mutex_unlock
 
-int mypthread_mutex_destroy(mypthread_mutex_t *mutex);
+8.int mypthread_mutex_destroy(mypthread_mutex_t *mutex);
+
 \- deallocate and clean up a mutex
+
 \- be sure the mutex is ulocked before allowing it to be destroy()ed
+
 \- your return values should mirror pthread_mutex_destroy
 
  
@@ -114,10 +133,11 @@ Profile both your code and the pthread library using the included benchmarks and
 
 # Submission:
 Prepare and submit a A0.tar.gz that holds:
-mypthread.h
-mypthread.c
-Makefile
-report.pdf
+- mypthread.h
+- mypthread.c
+- Makefile
+- report.pdf
+
 Any other source files needed that you wrote.
 
 Be sure that all group members submit. If you do not submit we can not assign your user a grade in Canvas.
