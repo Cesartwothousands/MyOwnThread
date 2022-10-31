@@ -14,6 +14,7 @@
 struct ThreadQueue waitQueue;
 struct ThreadQueue readyQueue;
 tcb* t_remove = NULL;
+tcb* currentThread = NULL;
 
 /* create a new thread */
 int mypthread_create(mypthread_t * thread, pthread_attr_t * attr, void *(*function)(void*), void * arg)
@@ -51,8 +52,8 @@ int mypthread_yield()
 	// switch from this thread's context to the scheduler's context
 	
 	No timer and no differenr status of thread
-	//setitimer(ITIMER_PROF, &timerOff, NULL);
-	//swapcontext(&(currentThread->context), &schedulerContext);
+	setitimer(ITIMER_PROF, &timerOff, NULL);
+	swapcontext(&(currentThread->context), &schedulerContext);
 	return 0;
 };
 
@@ -91,20 +92,28 @@ int mypthread_mutex_init(mypthread_mutex_t *mutex, const pthread_mutexattr_t *mu
 {
 	//initialize data structures for this mutex
 
-	mutex = myMalloc(sizeof(mypthread_mutex_t));
-	__atomic_clear(&mutex->lock_state,__ATOMIC_RELAXED);
+	mutex = malloc(sizeof(mypthread_mutex_t));
+
+	if(!mutex){return 1;}
+	else{	
+	__atomic_clear(&mutex->lock_state, __ATOMIC_RELAXED);
+	mutex->owner_id = NULL;
 	mutex->mutex_id = -1;
 	mutex->blockedQueueHead = NULL;
+	mutex->lock_state = UNLOCKED;
+
 	return 0;
+	}
 };
 
-How to decide currentThread and timer
+
 /* aquire a mutex lock */
 int mypthread_mutex_lock(mypthread_mutex_t *mutex)
 {
 	// use the built-in test-and-set atomic function to test the mutex
 	// if the mutex is acquired successfully, return
-	// if acquiring mutex fails, put the current thread on the blocked/waiting list and context switch to the scheduler thread
+	// if acquiring mutex fails, put the current thread on the blocke
+	//and context switch to the scheduler thread
 	
 	if (__atomic_test_and_set(&mutex->lock_state,__ATOMIC_RELAXED)==1){
 		setitimer(ITIMER_PROF, &timerOff, NULL);
@@ -112,8 +121,10 @@ int mypthread_mutex_lock(mypthread_mutex_t *mutex)
 		blocked_queue* newBlockedNode = myMalloc(sizeof(blocked_queue));
 		newBlockedNode->threadControlBlock = currentThread;
 		newBlockedNode->threadControlBlock->state = 2;
-		newBlockedNode->next = NULL;
 
+		State 要改
+		 
+		newBlockedNode->next = NULL;
 		currentThread = NULL;
 
 		if (mutex->blockedQueueHead == NULL)
@@ -124,7 +135,7 @@ int mypthread_mutex_lock(mypthread_mutex_t *mutex)
 		{
 			blocked_queue* crnt = mutex->blockedQueueHead;
 
-			while (crnt->next != NULL)
+			while(crnt->next != NULL)
 			{
 				crnt = crnt->next;
 			}
@@ -135,13 +146,12 @@ int mypthread_mutex_lock(mypthread_mutex_t *mutex)
 		swapcontext(&(newBlockedNode->threadControlBlock->context), &schedulerContext);
 	}
 	
-	mutex->lock_state = 1;
+	mutex->lock_state = LOCKED;
 	mutex->mutex_id = currentThread->mutex_id;
 
 	return 0;
 };
 
-How to decide currentThread
 /* release the mutex lock */
 int mypthread_mutex_unlock(mypthread_mutex_t *mutex)
 {

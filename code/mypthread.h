@@ -9,8 +9,8 @@
 
 
 #define _GNU_SOURCE
-#define LOCKED 0
-#define UNLOCKED 1
+#define LOCKED 1
+#define UNLOCKED 0
 #define MEM 12800
 
 /* in order to use the built-in Linux pthread library as a control for benchmarking,
@@ -55,6 +55,9 @@ typedef struct threadControlBlock
     void * arg;
     // return value after pthread_exit
     void *value_ptr;
+
+    mypthread_t mutex_id;
+
 } tcb;
 
 
