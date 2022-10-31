@@ -1,15 +1,21 @@
 // File:	mypthread_t.h
 
-// List all group members' names:
+// List all group members' names: Qipan Xu(qx67), Zihan Chen(zc366)
 // iLab machine tested on:
+
 
 #ifndef MYTHREAD_T_H
 #define MYTHREAD_T_H
 
-#define _GNU_SOURCE
 
-/* in order to use the built-in Linux pthread library as a control for benchmarking, you have to comment the USE_MYTHREAD macro */
-#define USE_MYTHREAD 1
+#define _GNU_SOURCE
+#define LOCKED 0
+#define UNLOCKED 1
+#define MEM 12800
+
+/* in order to use the built-in Linux pthread library as a control for benchmarking,
+ * you have to comment the USE_MYTHREAD macro */
+//#define USE_MYTHREAD 1
 
 /* include lib header files that you need here: */
 #include <unistd.h>
@@ -17,35 +23,97 @@
 #include <sys/types.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <ucontext.h>
+
 
 typedef uint mypthread_t;
+
+//thread state
+enum thread_state {
+    THREAD_UNINIT = 0,  // uninitialized
+    THREAD_SLEEPING,    // sleeping
+    THREAD_RUNNABLE,    // runnable(maybe running)
+    THREAD_EXIT
+};
 
 	/* add important states in a thread control block */
 typedef struct threadControlBlock
 {
-	// YOUR CODE HERE	
-	
 	// thread Id
+    unsigned int tid;
 	// thread status
-	// thread context
-	// thread stack
+    enum thread_state state;
+	// thread context & stack inside
+    ucontext_t context;
 	// thread priority
-	// And more ...
-
+    unsigned int priority;
+	// thread ptr that creates this thread
+    struct threadControlBlock *parent;
+    struct threadControlBlock* next;
+    // function execution
+    void *(*function)(void*);
+    void * arg;
+    // return value after pthread_exit
+    void *value_ptr;
 } tcb;
+
 
 /* mutex struct definition */
 typedef struct mypthread_mutex_t
 {
+    //pthread_mutex_t t;
+    int owner_id;
+    int mutex_id;
+    int lock_state;
 
-	// YOUR CODE HERE
-	
+    blocked_queue* blockedQueueHead;
+    
 } mypthread_mutex_t;
 
-
 // Feel free to add your own auxiliary data structures (linked list or queue etc...)
+struct ThreadQueue{
+    tcb* head;
+    tcb* tail;
+    unsigned int size;
+};
 
+typedef struct blocked_queue {
+	tcb* threadControlBlock;
+	struct queue* next;
+} blocked_queue;
 
+typedef struct run_queue {
+	tcb* threadControlBlock;
+	struct run_queue* next;
+} run_queue;
+
+typedef struct finished_queue {
+	mypthread_t t_id;
+	void* value;
+	struct finished_queue* next;
+} finished_queue;
+
+void addThread(struct ThreadQueue* T, tcb *a){
+    if (T->size == 0){
+        T->head = a;
+        T->tail = a;
+    }
+    else{
+        T->tail->next = a;
+        T->tail = T->tail->next;
+    }
+    T->size++;
+};
+
+tcb* removeThread(struct ThreadQueue* T){
+    if (T->size != 0){
+        tcb* res = T->head;
+        T->head = T->head->next;
+        T->size--;
+        return res;
+    }
+    return NULL;
+}
 
 /* Function Declarations: */
 
